@@ -3,6 +3,8 @@
 <head>
 <meta name="robots" content="none" />
   <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+  <!-- <script src="https://example.oktapreview.com/js/sdk/okta-auth-sdk-1.0.0.min.js"></script> -->
+  <script src="OktaAuth.js"></script>
   <link href="https://jgalvin.okta.com/js/sdk/okta-sign-in-1.0.2.min.css" type="text/css" rel="stylesheet">
   <link href="https://jgalvin.okta.com/js/sdk/okta-theme-1.0.2.css" type="text/css" rel="stylesheet">
 </head>
@@ -18,7 +20,8 @@
   </style>
 <body>
 
-	<div class="auth-content">
+<div ng-app="myApp" ng-controller="myCtrl">
+	<div class="auth-content" style="max-width:300px">
 		<div class="auth-content-inner">
 			<div class="primary-auth">
 				<div data-se="o-form-content" class="o-form-content o-form-theme clearfix">                        
@@ -28,8 +31,6 @@
 						<div data-se="o-form-fieldset" class="o-form-fieldset o-form-label-top">
 							<div data-se="o-form-input-container" class="o-form-input">
 								<span data-se="o-form-input-username" class="okta-form-input-field input-fix o-form-control">                        
-									<span class="input-tooltip icon form-help-16"></span>                          
-									<span class="icon input-icon person-16-gray"></span>                    
 									<input type="text" placeholder="Username" ng-model="userName" name="username">    
 								</span>
 							</div>
@@ -37,8 +38,6 @@
 						<div data-se="o-form-fieldset" class="o-form-fieldset o-form-label-top">
 							<div data-se="o-form-input-container" class="o-form-input">
 								<span data-se="o-form-input-password" class="okta-form-input-field input-fix o-form-control">                        
-									<span class="input-tooltip icon form-help-16"></span>                          
-									<span class="icon input-icon remote-lock-16"></span>                    
 									<input type="password" placeholder="Password" ng-model="password">    
 								</span>
 							</div>
@@ -53,10 +52,11 @@
 			<div class="auth-footer"></div>
 		</div>
 	</div>
+
+	<p>userName: '{{userName}}'</p>
+	<p>password:  '{{password}}'</p>
+	<p>Okta Session Token:  {{oktaSessionToken}}</p>
 </div>
-
-
-
 
 <script>
 var app = angular.module('myApp', []);
@@ -64,11 +64,42 @@ app.controller('myCtrl', function($scope) {
     $scope.userName = "";
     $scope.password = "";
 
+    $scope.myFunction = function() {
+    	console.log("I was clicked!");
+
+		authClient = new OktaAuth({url: 'https://jgalvin.okta.com'});
+		authClient.signIn({
+  			username: '{{userName}}',
+  			password: '{{password}}'
+		})
+		.then(function(transaction) {
+  			switch(transaction.status) {
+
+    		case 'SUCCESS':
+    			oktaSessionToken = transaction.sessionToken;
+      			authClient.session.setCookieAndRedirect(transaction.sessionToken);
+      			break;
+
+    		default:
+      			throw 'Error status' + transaction.status + ' was thrown';
+  		}
+	})
+
+
+	.fail(function(err) {
+  		console.error(err);
+  	})
+
+
+
+    }
+
+
 /*
 	var authClient = new OktaAuth({url: 'https://jgalvin.okta.com'});
 	authClient.signIn({
-  		username: 'blahblah',
-  		password: 'moreblahblah'
+  		username: '{{userName}}',
+  		password: '{{password}}'
 	})
 	.then(function(transaction) {
   		switch(transaction.status) {
@@ -86,6 +117,7 @@ app.controller('myCtrl', function($scope) {
 	.fail(function(err) {
   		console.error(err);
   	})
+
 */
 
 });
