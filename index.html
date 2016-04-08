@@ -55,70 +55,46 @@
 
 	<p>userName: '{{userName}}'</p>
 	<p>password:  '{{password}}'</p>
-	<p>Okta Session Token:  {{oktaSessionToken}}</p>
+	<p>Okta Session Token:  '{{oktaSessionToken}}'</p>
 </div>
 
 <script>
-var app = angular.module('myApp', []);
+app = angular.module('myApp', []);
 app.controller('myCtrl', function($scope) {
     $scope.userName = "";
     $scope.password = "";
+    $scope.oktaSessionToken = null;
 
     $scope.myFunction = function() {
-    	console.log("I was clicked!");
 
 		authClient = new OktaAuth({url: 'https://jgalvin.okta.com'});
+
 		authClient.signIn({
-  			username: '{{userName}}',
-  			password: '{{password}}'
+  			username: $scope.userName, 
+  			password: $scope.password
 		})
 		.then(function(transaction) {
   			switch(transaction.status) {
 
-    		case 'SUCCESS':
-    			oktaSessionToken = transaction.sessionToken;
-      			authClient.session.setCookieAndRedirect(transaction.sessionToken);
-      			break;
+    			case 'SUCCESS':
+    				$scope.oktaSessionToken = transaction.sessionToken;
+      				authClient.session.setCookieAndRedirect(transaction.sessionToken);
+				console.log("oktaSessionToken = " + $scope.oktaSessionToken);
+				console.log("Errror status: " + transaction.status);
+      				break;
 
-    		default:
-      			throw 'Error status' + transaction.status + ' was thrown';
-  		}
-	})
-
-
-	.fail(function(err) {
-  		console.error(err);
-  	})
+    			default:
+      				throw 'Error status' + transaction.status + ' was thrown';
+  			}
+		})
+		.fail(function(err) {
+  			console.error(err);
+  		})
 
 
 
     }
 
-
-/*
-	var authClient = new OktaAuth({url: 'https://jgalvin.okta.com'});
-	authClient.signIn({
-  		username: '{{userName}}',
-  		password: '{{password}}'
-	})
-	.then(function(transaction) {
-  		switch(transaction.status) {
-
-    	case 'SUCCESS':
-      		authClient.session.setCookieAndRedirect(transaction.sessionToken);
-      		break;
-
-    	default:
-      		throw 'We cannot handle the ' + transaction.status + ' status';
-  		}
-	})
-
-
-	.fail(function(err) {
-  		console.error(err);
-  	})
-
-*/
 
 });
 </script>
