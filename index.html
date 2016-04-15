@@ -44,7 +44,7 @@
 						</div>
 						<div data-se="o-form-fieldset" class="o-form-fieldset o-form-label-top margin-btm-0">
 							<div class="o-form-button-bar">
-								<button ng-click="myFunction()">Log In</button>
+								<button ng-click="loginFunction()">Log In</button><button ng-click="logoutFunction()">Log Out</button>
 							</div>
 						</div>
 					</div>    
@@ -63,9 +63,9 @@ app = angular.module('myApp', []);
 app.controller('myCtrl', function($scope) {
     $scope.userName = "";
     $scope.password = "";
-    $scope.oktaSessionToken = null;
+    $scope.oktaSessionToken = "";
 
-    $scope.myFunction = function() {
+    $scope.loginFunction = function() {
 
 		authClient = new OktaAuth({url: 'https://jgalvin.okta.com'});
 
@@ -74,13 +74,14 @@ app.controller('myCtrl', function($scope) {
   			password: $scope.password
 		})
 		.then(function(transaction) {
+			console.log("transaction = " + Object.prototype.toString.call(transaction));
   			switch(transaction.status) {
 
     			case 'SUCCESS':
     				$scope.oktaSessionToken = transaction.sessionToken;
-      				authClient.session.setCookieAndRedirect(transaction.sessionToken);
 				console.log("oktaSessionToken = " + $scope.oktaSessionToken);
 				console.log("Errror status: " + transaction.status);
+				$scope.$apply();
       				break;
 
     			default:
@@ -92,6 +93,30 @@ app.controller('myCtrl', function($scope) {
   		})
 
 
+
+    }
+
+    $scope.logoutFunction = function() {
+             authClient.signOut()
+             .then(function(transaction)  {
+		
+		   switch(transaction.status) {
+			
+             	   case 'SUCCESS':
+				
+                                console.log("Issued logout for session Token : " + $scope.oktaSessionToken);
+                                console.log("Errror status: " + transaction.status);
+				$scope.oktaSessionToken = null;
+				$scope.$apply();
+                                break;
+
+                   default:
+                                throw 'Error status' + transaction.status + ' was thrown';
+                        }
+                })
+                .fail(function(err) {
+                        console.error(err);
+                })
 
     }
 
