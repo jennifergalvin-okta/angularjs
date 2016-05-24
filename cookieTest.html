@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="robots" content="none" />
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.9/angular-cookies.js"></script>
+  <script src="https://example.oktapreview.com/js/sdk/okta-auth-sdk-1.0.0.min.js"></script>
+  <link href="https://jgalvin.okta.com/js/sdk/okta-sign-in-1.0.2.min.css" type="text/css" rel="stylesheet">
+  <link href="https://jgalvin.okta.com/js/sdk/okta-theme-1.0.2.css" type="text/css" rel="stylesheet">
+</head>
+<style>
+    body {
+      background-repeat: no-repeat;
+      background-position: center;
+      -webkit-background-size: cover;
+      -moz-background-size: cover;
+      -o-background-size: cover;
+      background-size: cover;
+    }
+  </style>
+<body>
+
+<div ng-app="myApp" ng-controller="myCtrl">
+	<div class="auth-content" style="max-width:300px">
+		<div class="auth-content-inner">
+			<div class="primary-auth">
+				<div data-se="o-form-content" class="o-form-content o-form-theme clearfix">                        
+					<h2 data-se="o-form-head" class="okta-form-title o-form-head">jgalvin.okta.com login test</h2>                          
+					<div class="o-form-error-container" data-se="o-form-error-container"></div>      
+					<div class="o-form-fieldset-container" data-se="o-form-fieldset-container">
+						<div data-se="o-form-fieldset" class="o-form-fieldset o-form-label-top">
+							<div data-se="o-form-input-container" class="o-form-input">
+								<span data-se="o-form-input-username" class="okta-form-input-field input-fix o-form-control">                        
+									<input type="text" placeholder="Username" ng-model="userName" name="username">    
+								</span>
+							</div>
+						</div>
+						<div data-se="o-form-fieldset" class="o-form-fieldset o-form-label-top">
+							<div data-se="o-form-input-container" class="o-form-input">
+								<span data-se="o-form-input-password" class="okta-form-input-field input-fix o-form-control">                        
+									<input type="password" placeholder="Password" ng-model="password">    
+								</span>
+							</div>
+						</div>
+						<div data-se="o-form-fieldset" class="o-form-fieldset o-form-label-top margin-btm-0">
+							<div class="o-form-button-bar">
+								<button ng-click="loginFunction()">Log In</button><button ng-click="logoutFunction()">Log Out</button>
+							</div>
+						</div>
+					</div>    
+				</div>  
+			<div class="auth-footer"></div>
+		</div>
+	</div>
+
+	<p>userName: '{{userName}}'</p>
+	<p>Okta Session Token:  '{{oktaSessionToken}}'</p>
+</div>
+
+<script>
+app = angular.module('myApp', ['ngCookies']);
+app.controller('myCtrl', function ($scope, $window, $cookieStore) {
+    $scope.userName = "";
+    $scope.password = "";
+    $scope.oktaSessionToken = "";
+
+
+        $scope.WriteCookie = function ()
+        {
+                $cookieStore.put("Name", $scope.Name);
+        }
+        $scope.ReadCookie = function ()
+        {
+                $window.alert($cookieStore.get('Name'));
+        }
+        $scope.RemoveCookie = function ()
+        {
+                $cookieStore.remove('Name');
+        }
+
+
+    $scope.loginFunction = function() {
+
+		authClient = new OktaAuth({url: 'https://jgalvin.okta.com'});
+
+		authClient.signIn({
+  			username: $scope.userName, 
+  			password: $scope.password
+		})
+		.then(function(transaction) {
+			console.log("transaction = " + Object.prototype.toString.call(transaction));
+  			switch(transaction.status) {
+
+    			case 'SUCCESS':
+    				$scope.oktaSessionToken = transaction.sessionToken;
+				console.log("oktaSessionToken = " + $scope.oktaSessionToken);
+				console.log("Errror status: " + transaction.status);
+				$scope.$apply();
+
+				authClient.session.setCookieAndRedirect(transaction.sessionToken); 
+      				break;
+
+    			default:
+      				throw 'Error status' + transaction.status + ' was thrown';
+  			}
+		})
+		.fail(function(err) {
+  			console.error(err);
+  		})
+
+
+
+    }
+
+    $scope.logoutFunction = function() {
+             authClient.signOut()
+             .then(function(transaction)  {
+		
+		   switch(transaction.status) {
+			
+             	   case 'SUCCESS':
+				
+                                console.log("Issued logout for session Token : " + $scope.oktaSessionToken);
+                                console.log("Errror status: " + transaction.status);
+				$scope.oktaSessionToken = null;
+				$scope.$apply();
+                                break;
+
+                   default:
+                                throw 'Error status' + transaction.status + ' was thrown';
+                        }
+                })
+                .fail(function(err) {
+                        console.error(err);
+                })
+
+    }
+
+
+});
+</script>
+
+
+
+</body>
+</html>
